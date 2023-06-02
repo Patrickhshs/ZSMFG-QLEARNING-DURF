@@ -21,20 +21,21 @@ class MyEnvKFPCyberSecurity(object):
 
 
     def __init__(self):
+
         self.T = 0.2#0.5 # for one time step
         self.Nt = 1#5
         self.Dt = self.T / self.Nt # time step for KFP PDE
         self.NS = 4 # number of states
-        self.beta_UU = 0.3
-        self.beta_UD = 0.4
-        self.beta_DU = 0.3
-        self.beta_DD = 0.4
+        self.beta_UU = 0.3 #infection rate for undefended to undefended computers
+        self.beta_UD = 0.4 #infection rate for undefended to defended computers
+        self.beta_DU = 0.3 #infection rate for defended to undefended computers
+        self.beta_DD = 0.4 #infection rate for defended to defended computers
         self.v_H = 0.6 # attack intensity
         self.lambda_speed = 0.8 # speed of response
-        self.q_rec_D = 0.5
-        self.q_rec_U = 0.4
-        self.q_inf_D = 0.4
-        self.q_inf_U = 0.3
+        self.q_rec_D = 0.5 #recover rate if computer is defended
+        self.q_rec_U = 0.4 #recover rate if computer is undefended
+        self.q_inf_D = 0.4 #infection rate if computer is defended
+        self.q_inf_U = 0.3 #infection rate if computer is undefended
         self.k_D = 0.3 # cost of being defended
         self.k_I = 0.5 # cost of being infected
         #self.stateInit = [0.25, 0.25, 0.25, 0.25] # initial distribution
@@ -45,7 +46,7 @@ class MyEnvKFPCyberSecurity(object):
         #     self.running_cost_vec[iS] = self.running_cost_t(iS)
         action_set = [0, 1] # actions
         action_space = []
-        for iS in range(self.NS):
+        for iS in range(self.NS):# get the action space for each state
             action_space.append(action_set)
 
         # FOR DDPG
@@ -53,6 +54,7 @@ class MyEnvKFPCyberSecurity(object):
         self.action_dim = 4 #env.action_space.shape[0]
         self.action_bound = 1.0 #env.action_space.high
         # no env.action_space.high and env.action_space.low, just use self.action_bound
+
         self.dt = self.Dt
         return
 
@@ -68,21 +70,25 @@ class MyEnvKFPCyberSecurity(object):
             return 3
 
     # Version with a continuous alpha, truncated between 0 and 1
-    def get_lambda_t_continuousAlpha(self, mu_t, alpha_t):
+    def get_lambda_t_continuousAlpha(self, mu_t, alpha_t):#Get the transition matrix
+        
         # see page 656 of volume I
-        lambda_matrix = np.zeros((self.NS, self.NS))
+        lambda_matrix = np.zeros((self.NS, self.NS))#Create empty matrtix
         lambda_matrix[self.get_index('DI'),self.get_index('DS')] = self.q_rec_D
         lambda_matrix[self.get_index('DS'),self.get_index('DI')] = self.v_H*self.q_inf_D + self.beta_DD*mu_t[self.get_index('DI')] + self.beta_UD*mu_t[self.get_index('UI')]
         lambda_matrix[self.get_index('UI'),self.get_index('US')] = self.q_rec_U
         lambda_matrix[self.get_index('US'),self.get_index('UI')] = self.v_H*self.q_inf_U + self.beta_UU*mu_t[self.get_index('UI')] + self.beta_DU*mu_t[self.get_index('DI')]
-        alpha_t_trunc = min(1.0, max(0.0, alpha_t))
+        alpha_t_trunc = min(1.0, max(0.0, alpha_t))#Select the alpha_t
         #alpha_t_trunc = alpha_t # already bounded in actor's definition ## BUT THERE IS NOISE FOR EXPLORATION
         #if alpha_t == 1:
+
+        
         lambda_matrix[self.get_index('DI'),self.get_index('UI')] = alpha_t_trunc * self.lambda_speed
         lambda_matrix[self.get_index('DS'),self.get_index('US')] = alpha_t_trunc * self.lambda_speed
         lambda_matrix[self.get_index('UI'),self.get_index('DI')] = alpha_t_trunc * self.lambda_speed
         lambda_matrix[self.get_index('US'),self.get_index('DS')] = alpha_t_trunc * self.lambda_speed
-        for iS in range(0,self.NS):
+
+        for iS in range(0,self.NS):#Fill the diagonal with negative sum of the entities in each row
             lambda_matrix[iS, iS] = - np.sum(lambda_matrix[iS])
         return lambda_matrix
 
@@ -105,8 +111,11 @@ class MyEnvKFPCyberSecurity(object):
     def running_cost_t(self, iS, mu):
         # running cost for given state and control
         rcost = 0
+        #cost of the central planner if computers are defended
         if iS == self.get_index('DI') or iS == self.get_index('DS'):
             rcost += self.k_D
+
+        #cost of the central planner if computers are undefended
         if iS == self.get_index('DI') or iS == self.get_index('UI'):
             rcost += self.k_I
         return rcost
@@ -115,6 +124,8 @@ class MyEnvKFPCyberSecurity(object):
     #     return 0
 
     def get_Hamiltonian(self, iS, mu_t, u_t, alpha_t):
+
+        #Hamiltonian stands for the cost
         return np.matmul(self.get_lambda_t_continuousAlpha(mu_t, u_t, alpha_t)[iS], u_t) + self.running_cost_t(iS)
 
     # Derivatives of the Hamiltonian wrt measure at point iSderiv
@@ -140,6 +151,8 @@ class MyEnvKFPCyberSecurity(object):
         # see equation (7.37)
         q_t = np.zeros((self.NS, self.NS))
         #alphahat = get_alphahat_t_vec(mu_t, u_t)
+
+        #get the q table for different alpha
         for iS in range(self.NS):
             #q_t[iS] = self.get_lambda_t(mu_t, alpha[iS])[iS]# alphahat[iS])[iS]
             q_t[iS] = self.get_lambda_t_continuousAlpha(mu_t, alpha[iS])[iS]# alphahat[iS])[iS]
@@ -150,12 +163,15 @@ class MyEnvKFPCyberSecurity(object):
         social_reward = 0 # reward for the social planner
         new_mu_prev = np.zeros(self.NS)
         new_mu = np.zeros(self.NS)
-        new_mu_prev = mu
+        new_mu_prev = mu # new state distribution; shape(4,1)
+
+        # number of iteration
         for it in range(0,self.Nt):
             q_t = self.get_q_t_withActions(new_mu_prev, alpha)
             new_mu = np.matmul(new_mu_prev, np.eye(self.NS) + self.Dt*q_t)
             # self.running_cost_vec = np.zeros(self.NS)
-            for iS in range(self.NS):
+
+            for iS in range(self.NS):#iterate each state
                 # self.running_cost_vec[iS] = self.running_cost_t(iS, new_mu_prev)
                 # social_reward += -self.running_cost_t(iS, new_mu_prev) * new_mu_prev[iS] # new_mu[iS]#
                 social_reward += -np.inner(self.running_cost_t(iS, new_mu), new_mu[iS])#
