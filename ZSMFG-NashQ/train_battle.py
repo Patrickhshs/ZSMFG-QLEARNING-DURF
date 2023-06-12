@@ -4,9 +4,9 @@ import torch
 import numpy as np
 import magent
 
-from examples.battle_model.algo import spawn_ai
-from examples.battle_model.algo import tools
-from examples.battle_model.senario_battle import play
+from BattleModel.Algo import spawn_ai
+from BattleModel.Algo import tools
+from BattleModel.senario_battle import play
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -30,7 +30,7 @@ def linear_decay(epoch, x, y):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--algo', type=str, choices={'ac', 'mfac', 'mfq', 'il'}, help='choose an algorithm from the preset', required=True)
+    parser.add_argument('--algo', type=str, default="mfq", help='choose an algorithm from the preset')
     parser.add_argument('--save_every', type=int, default=10, help='decide the self-play update interval')
     parser.add_argument('--update_every', type=int, default=5, help='decide the udpate interval for q-learning, optional')
     parser.add_argument('--n_round', type=int, default=2000, help='set the trainning round')
@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     # Initialize the environment
     env = magent.GridWorld('battle', map_size=args.map_size)
-    env.set_render_dir(os.path.join(BASE_DIR, 'examples/battle_model', 'build/render'))
+    env.set_render_dir(os.path.join(BASE_DIR, 'BattleModel', 'build/render'))
     handles = env.get_handles()
 
     log_dir = os.path.join(BASE_DIR, 'data/tmp'.format(args.algo))

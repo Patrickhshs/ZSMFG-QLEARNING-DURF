@@ -1,6 +1,6 @@
 from . import nash_q_learning
 
-nashQ=q_learning.nashQ
+nashQ=nash_q_learning.NashQ
 
 def spawn_ai(algo_name,sess,env,handle,human_name,max_steps):
     if algo_name=="nashQ":
