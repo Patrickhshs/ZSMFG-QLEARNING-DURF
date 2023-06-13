@@ -13,31 +13,36 @@ class ValueNet(nn.Module):
         self.name = name
 
         self.handle = handle
-        self.view_space = env.get_view_space(handle)
+        self.view_space = env.get_view_space(handle) 
         assert len(self.view_space) == 3
         self.feature_space = env.get_feature_space(handle)
-        self.num_actions = env.get_action_space(handle)[0]
+        self.num_actions = env.get_action_space(handle)[0] # action dimension
 
-        self.update_every = update_every
+        self.update_every = update_every # steps of updating
         self.use_mf = use_mf  # trigger of using mean field
         self.temperature = 0.1
 
-        self.lr = learning_rate
-        self.tau = tau
+        self.lr = learning_rate # learning rate
+        self.tau = tau 
         self.gamma = gamma
 
-        self.obs_input = nn.Parameter(torch.Tensor(*self.view_space))
-        self.feat_input = nn.Parameter(torch.Tensor(*self.feature_space))
-        self.mask = nn.Parameter(torch.Tensor(1))
+        self.obs_input = nn.Parameter(torch.Tensor(*self.view_space)) # declare the dimension of observation input
+        self.feat_input = nn.Parameter(torch.Tensor(*self.feature_space)) # declare the dimension of feature_space input 
+        self.mask = nn.Parameter(torch.Tensor(1)) # 
 
         if self.use_mf:
-            self.act_prob_input = nn.Parameter(torch.Tensor(1, self.num_actions))
+            self.act_prob_input = nn.Parameter(torch.Tensor(1, self.num_actions)) # declare the dimension of action distribution
 
         self.act_input = nn.Parameter(torch.Tensor(1))
 
-        self._construct_net()
+        # To-do:
+        # modify the forward function, write the model archi
+        # rewrite the training; model parameter
+        # asure the value function
+        # sudo code
+        # action initialization and state distribution
 
-        self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
 
     def _construct_net(self):
         self.conv1 = nn.Conv2d(self.view_space[0], 32, kernel_size=3)
@@ -74,6 +79,10 @@ class ValueNet(nn.Module):
         q = self.q_value(out)
 
         return q
+
+    def update_op(self,**kwargs):
+        self.update_op_formula=[ for i in range(len(self.action_space.view()))]
+
 
     def calc_target_q(self, **kwargs):
         """Calculate the target Q-value
@@ -154,6 +163,7 @@ class ValueNet(nn.Module):
     def train_op(self):
         e_q = self.e_q()
         e_q_max = torch.sum(torch.mul(self.act_one_hot(), e_q), dim=1)
+        loss = nn.CrossEntropyWithLoss(reduction="sum")
         loss = torch.sum(torch.square(self.target_q_input - e_q_max) * self.mask) / torch.sum(self.mask)
         return loss, e_q_max
 
