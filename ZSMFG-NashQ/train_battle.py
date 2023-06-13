@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     # Initialize the environment
     env = magent.GridWorld('battle', map_size=args.map_size)
-    env.set_render_dir(os.path.join(BASE_DIR, 'BattleModel', 'build/render'))
+    env.set_render_dir(os.path.join(BASE_DIR, 'BattleModel', 'render'))
     handles = env.get_handles()
 
     log_dir = os.path.join(BASE_DIR, 'data/tmp'.format(args.algo))

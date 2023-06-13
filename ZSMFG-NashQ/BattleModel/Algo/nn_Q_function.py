@@ -65,6 +65,7 @@ class ValueNet(nn.Module):
 
         if self.use_mf:
             prob_emb = nn.functional.relu(self.act_prob_input)
+            #transfer to 
             h_act_prob = nn.functional.relu(nn.Linear(prob_emb.size(1), 32)(prob_emb))
             concat_layer = torch.cat([concat_layer, h_act_prob], dim=1)
 

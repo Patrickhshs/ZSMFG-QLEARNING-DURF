@@ -1,5 +1,8 @@
 import numpy as np
 import os
+import torch
+from torch.utils.tensorboard import SummaryWriter 
+import torch.nn as nn
 
 
 class Color:
@@ -246,19 +249,12 @@ class SummaryObj:
     """
     def __init__(self, log_dir, log_name, n_group=1):
         self.name_set = set()
-        self.gra = tf.Graph()
         self.n_group = n_group
 
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
 
-        sess_config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
-        sess_config.gpu_options.allow_growth = True
-
-        with self.gra.as_default():
-            self.sess = tf.Session(graph=self.gra, config=sess_config)
-            self.train_writer = tf.summary.FileWriter(log_dir + "/" + log_name, graph=tf.get_default_graph())
-            self.sess.run(tf.global_variables_initializer())
+        self.writer = SummaryWriter(log_dir=os.path.join(log_dir, log_name))
 
     def register(self, name_list):
         """Register summary operations with a list contains names for these operations
@@ -267,16 +263,11 @@ class SummaryObj:
         ----------
         name_list: list, contains name whose type is str
         """
-
-        with self.gra.as_default():
-            for name in name_list:
-                if name in self.name_set:
-                    raise Exception("You cannot define different operations with same name: `{}`".format(name))
-                self.name_set.add(name)
-                setattr(self, name, [tf.placeholder(tf.float32, shape=None, name='Agent_{}_{}'.format(i, name))
-                                     for i in range(self.n_group)])
-                setattr(self, name + "_op", [tf.summary.scalar('Agent_{}_{}_op'.format(i, name), getattr(self, name)[i])
-                                             for i in range(self.n_group)])
+        for name in name_list:
+            if name in self.name_set:
+                raise Exception("You cannot define different operations with the same name: `{}`".format(name))
+            self.name_set.add(name)
+            setattr(self, name, [torch.zeros(1) for _ in range(self.n_group)])
 
     def write(self, summary_dict, step):
         """Write summary related to a certain step
@@ -286,7 +277,6 @@ class SummaryObj:
         summary_dict: dict, summary value dict
         step: int, global step
         """
-
         assert isinstance(summary_dict, dict)
 
         for key, value in summary_dict.items():
@@ -294,22 +284,17 @@ class SummaryObj:
                 raise Exception("Undefined operation: `{}`".format(key))
             if isinstance(value, list):
                 for i in range(self.n_group):
-                    self.train_writer.add_summary(self.sess.run(getattr(self, key + "_op")[i], feed_dict={
-                        getattr(self, key)[i]: value[i]}), global_step=step)
+                    self.writer.add_scalar(f"Agent_{i}_{key}", value[i], global_step=step)
             else:
-                self.train_writer.add_summary(self.sess.run(getattr(self, key + "_op")[0], feed_dict={
-                        getattr(self, key)[0]: value}), global_step=step)
-
+                self.writer.add_scalar(f"Agent_0_{key}", value, global_step=step)
 
 class Runner(object):
-    def __init__(self, sess, env, handles, map_size, max_steps, models,
+    def __init__(self, env, handles, map_size, max_steps, models,
                 play_handle, render_every=None, save_every=None, tau=None, log_name=None, log_dir=None, model_dir=None, train=False):
         """Initialize runner
 
         Parameters
         ----------
-        sess: tf.Session
-            session
         env: magent.GridWorld
             environment handle
         handles: list
@@ -317,14 +302,14 @@ class Runner(object):
         map_size: int
             map size of grid world
         max_steps: int
-            the maximum of stages in a episode
+            the maximum of stages in an episode
         render_every: int
             render environment interval
         save_every: int
             states the interval of evaluation for self-play update
         models: list
             contains models
-        play_handle: method like
+        play_handle: method-like
             run game
         tau: float
             tau index for self-play update
@@ -333,7 +318,9 @@ class Runner(object):
         log_dir: str
             donates the directory of logs
         model_dir: str
-            donates the dircetory of models
+            donates the directory of models
+        train: bool
+            whether it is in training mode or not
         """
         self.env = env
         self.models = models
@@ -353,20 +340,15 @@ class Runner(object):
             self.summary.register(summary_items)  # summary register
             self.summary_items = summary_items
 
-            assert isinstance(sess, tf.Session)
-            assert self.models[0].name_scope != self.models[1].name_scope
-            self.sess = sess
-
-            l_vars, r_vars = self.models[0].vars, self.models[1].vars
+            l_vars, r_vars = self.models[0].parameters(), self.models[1].parameters()
             assert len(l_vars) == len(r_vars)
-            self.sp_op = [tf.assign(r_vars[i], (1. - tau) * l_vars[i] + tau * r_vars[i])
-                                for i in range(len(l_vars))]
+            self.sp_op = [nn.functional.lerp(l_var, r_var, tau) for l_var, r_var in zip(l_vars, r_vars)]
 
             if not os.path.exists(self.model_dir):
                 os.makedirs(self.model_dir)
 
     def run(self, variant_eps, iteration, win_cnt=None):
-        info = {'mian': None, 'opponent': None}
+        info = {'main': None, 'opponent': None}
 
         # pass
         info['main'] = {'ave_agent_reward': 0., 'total_reward': 0., 'kill': 0.}
@@ -386,7 +368,7 @@ class Runner(object):
             # if self.save_every and (iteration + 1) % self.save_every == 0:
             if info['main']['total_reward'] > info['opponent']['total_reward']:
                 print(Color.INFO.format('\n[INFO] Begin self-play Update ...'))
-                self.sess.run(self.sp_op)
+                self.sp_op()
                 print(Color.INFO.format('[INFO] Self-play Updated!\n'))
 
                 print(Color.INFO.format('[INFO] Saving model ...'))
