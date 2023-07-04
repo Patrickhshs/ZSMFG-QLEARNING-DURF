@@ -342,7 +342,7 @@ class Runner(object):
 
             l_vars, r_vars = self.models[0].parameters(), self.models[1].parameters()
             assert len(l_vars) == len(r_vars)
-            self.sp_op = [nn.functional.lerp(l_var, r_var, tau) for l_var, r_var in zip(l_vars, r_vars)]
+            self.sp_op = [torch.lerp(l_var, r_var, tau) for l_var, r_var in zip(l_vars, r_vars)]
 
             if not os.path.exists(self.model_dir):
                 os.makedirs(self.model_dir)

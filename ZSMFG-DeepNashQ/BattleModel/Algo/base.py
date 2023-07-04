@@ -42,6 +42,10 @@ class ValueNet(nn.Module):
         # sudo code
         # action initialization and state distribution
 
+        self.model=nn.Sequential(
+
+        )
+
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
 
     def _construct_net(self):
@@ -163,7 +167,7 @@ class ValueNet(nn.Module):
     def train_op(self):
         e_q = self.e_q()
         e_q_max = torch.sum(torch.mul(self.act_one_hot(), e_q), dim=1)
-        loss = nn.CrossEntropyWithLoss(reduction="sum")
+
         loss = torch.sum(torch.square(self.target_q_input - e_q_max) * self.mask) / torch.sum(self.mask)
         return loss, e_q_max
 
