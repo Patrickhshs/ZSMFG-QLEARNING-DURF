@@ -3,7 +3,7 @@ import numpy as np
 import my_env
 
 class MyTable():
-    def __init__(self,n_steps_state=4,n_states_x=30,environment=None):
+    def __init__(self,n_steps_state=30,n_states_x=4,environment=None):
         self.n_steps_state=n_steps_state
         self.n_states_x=n_states_x
         self.env=environment
@@ -25,7 +25,7 @@ class MyTable():
         self.Q_old = np.zeros((self.n_states, self.n_controls))
         self.controls=controls
         # Q_old[:,11] = 0.01
-        # Q_new = np.zeros((n_states, n_controls))
+        # Q_new = np.zeros((n_states, n_controls))v 
         print("Q shape = {}".format(np.shape(self.Q_old)))
         
 
