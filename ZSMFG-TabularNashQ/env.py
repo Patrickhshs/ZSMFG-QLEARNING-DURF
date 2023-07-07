@@ -1,6 +1,6 @@
 import numpy as np
 #from battleGame.magent2.environments import battle_v4
-from battleGame.magent2.gridworld import GridWorld
+from MAgent.python.magent.gridworld import GridWorld
 
 class myBattleGameEnv(object):
 
