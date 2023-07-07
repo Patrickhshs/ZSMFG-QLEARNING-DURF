@@ -8,6 +8,7 @@ class myBattleGameEnv(object):
         self.size = size
         self.rec_rate = recovery_rate
         self.dead_penalty = dead_penalty
+        self.att_penalty = attack_penalty
         self.att_reward = attack_antagonist_reward
         self.kill_reward = kill_antagonist_reward
 
@@ -20,7 +21,7 @@ class myBattleGameEnv(object):
         # self.prob_attack = 0.2
 
 
-        self.n_states=self.size*self.size
+        self.n_states = self.size*self.size 
         self.env = GridWorld('battle')
 
 

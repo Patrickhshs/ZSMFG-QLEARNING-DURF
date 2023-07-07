@@ -58,7 +58,7 @@ iters = []
 Q_diff_sup = []
 Q_diff_L2 = []
 
-
+lr=0.8
 
 
 
