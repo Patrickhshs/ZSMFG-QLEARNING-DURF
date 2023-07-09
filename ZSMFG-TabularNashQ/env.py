@@ -1,5 +1,6 @@
 import numpy as np
 #from battleGame.magent2.environments import battle_v4
+import nashpy as nash
 from MAgent.python.magent.gridworld import GridWorld
 
 class myBattleGameEnv(object):
@@ -23,6 +24,8 @@ class myBattleGameEnv(object):
 
         self.n_states = self.size*self.size 
         self.env = GridWorld('battle')
+        self.n_actions = self.env.get_action_space()
+
 
 
     def get_index(self,m,n):
@@ -30,7 +33,8 @@ class myBattleGameEnv(object):
         
         return index
 
-    def get_transition_matrix(self,mu_t,pi):
+    # recalculate the transition_matrix because every time the agents deploys a different strategy pi
+    def cal_transition_matrix(self,mu_t,pi):
 
         trans_matrix=np.zeros((self.n_states,self.n_states))
         for i in range(self.n_states):
@@ -43,9 +47,31 @@ class myBattleGameEnv(object):
 
 
     def get_q_t_withActions(self,mu_t,alpha_1,alpha_2):
+        q_t = np.zeros((self.n_states,self.n_states))
+        for iS in range(self.n_states):
+            q_t[iS] = self.cal_transition_matrix(mu_t,alpha_1,alpha_2)
+
+
+    # visit every action pair of player 1 and player 2 to get reward matrix
+    def get_reward_mat(self):
+        reward_mat=np.zeros(self.n_actions,self.n_actions)
+
+
+    def get_next_mu(self):
         pass
 
-    def get_mu_and_reward():
-        pass
+
+    def get_nash_Q_value(self,Q_table,reward_matrix):
+            # Zero sum case solver to get stage nash eq by lemke-Howson
+
+            A = reward_matrix #reward of current agent
+            B = -A # reward of antagonist 
+            rps = nash.Game(A,B)
+            #e = rps.support_enumeration()
+            nash_pi =  rps.lemke_howson(initial_dropped_label=0)
+            i_mu_next=self.compute_next_mu()
+            nash_Q_value = np.mat(nash_pi[0],nash_pi[1]) * Q_table[i_mu_next]
+
+            return nash_Q_value
 
     

@@ -1,7 +1,6 @@
 import numpy as np
-import battleGame.magent2.environments
 import itertools
-import nashpy as nash
+
 
 
 class myQTable():
@@ -35,17 +34,6 @@ class myQTable():
             
             return np.argmin(map(lambda mu2: np.sum(np.abs(mu - mu2)), self.states))
 
-        def get_nash_Q_value(self,Q_table,reward_matrix,i_mu_next):
-            # Zero sum case solver to get stage nash eq by lemke-Howson
-
-            A = reward_matrix #reward of current agent
-            B = -A # reward of antagonist 
-            rps = nash.Game(A,B)
-            #e = rps.support_enumeration()
-            nash_pi =  rps.lemke_howson(initial_dropped_label=0)
-            nash_Q_value = np.mat(nash_pi[0],nash_pi[1]) * Q_table[i_mu_next]
-
-            return nash_Q_value
 
 
 
