@@ -5,7 +5,7 @@ import itertools
 
 class myQTable():
     
-        def __init__(self,n_states_x=5,n_steps_state=30):
+        def __init__(self,n_states_x=5,n_steps_state=50):
             self.n_states_x=n_states_x
             self.n_steps_state=n_steps_state # big N in the simplex discretization 
 
@@ -15,7 +15,7 @@ class myQTable():
             distributions_unnorm = np.asarray([el for el in combi_mu])
             states_tmp = distributions_unnorm.copy()
             self.states = states_tmp[np.where(np.sum(states_tmp, axis=1) == self.n_steps_state)] / float(self.n_steps_state)#shape:(5456,4)
-            print(np.shape(self.states))
+            #print(self.states[1:3])
             self.n_states = np.shape(self.states)[0]
             self.n_steps_ctrl = 2 # as we have 
 
