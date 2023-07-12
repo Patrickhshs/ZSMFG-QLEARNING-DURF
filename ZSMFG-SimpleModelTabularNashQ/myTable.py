@@ -5,7 +5,7 @@ import itertools
 
 class myQTable():
     
-        def __init__(self,n_states_x=10,n_steps_state=30,environment=None):
+        def __init__(self,n_states_x=3,n_steps_state=30):
             self.n_states_x=n_states_x
             self.n_steps_state=n_steps_state # big N in the simplex discretization 
 
@@ -15,6 +15,7 @@ class myQTable():
             distributions_unnorm = np.asarray([el for el in combi_mu])
             states_tmp = distributions_unnorm.copy()
             self.states = states_tmp[np.where(np.sum(states_tmp, axis=1) == self.n_steps_state)] / float(self.n_steps_state)#shape:(5456,4)
+            print(np.shape(self.states))
             self.n_states = np.shape(self.states)[0]
             self.n_steps_ctrl = 2 # as we have 
 
@@ -28,7 +29,7 @@ class myQTable():
             self.Q_old = np.zeros((self.n_states, self.n_controls ,self.n_controls)) # shape:(state,action_1,action_2)
             self.controls = controls
             # Q_old[:,11] = 0.01
-            # Q_new = np.zeros((n_states, n_controls))v 
+            # Q_new = np.zeros((n_states, n_controls))
             print("Q shape = {}".format(np.shape(self.Q_old)))
         
         def proj_W_index(self,mu):

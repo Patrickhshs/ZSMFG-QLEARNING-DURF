@@ -150,11 +150,11 @@ class MyEnvKFPCyberSecurity(object):
     def get_q_t_withActions(self, mu_t, alpha):
         # see equation (7.37)
         q_t = np.zeros((self.NS, self.NS))
-        #alphahat = get_alphahat_t_vec(mu_t, u_t)
+        # alphahat = get_alphahat_t_vec(mu_t, u_t)
 
-        #get the q table for different alpha
+        # get the q table for different alpha
         for iS in range(self.NS):
-            #q_t[iS] = self.get_lambda_t(mu_t, alpha[iS])[iS]# alphahat[iS])[iS]
+            # q_t[iS] = self.get_lambda_t(mu_t, alpha[iS])[iS]# alphahat[iS])[iS]
             q_t[iS] = self.get_lambda_t_continuousAlpha(mu_t, alpha[iS])[iS]# alphahat[iS])[iS]
         return q_t
 

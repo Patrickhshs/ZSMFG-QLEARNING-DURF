@@ -29,18 +29,10 @@ class MyTable():
         print("Q shape = {}".format(np.shape(self.Q_old)))
         
 
-    def proj_W_index(self,mu):#Get the distance of estimate new_mu(let's say) and the existed distribution, select the nearest state.
-            
+    def proj_W_index(self,mu):
+        #Get the distance of estimate new_mu(let's say) and the existed distribution, select the nearest state.
 
-            # print("W mu = {}".format(mu))
-            #print("W map = {}".format(map(lambda mu2 : stats.wasserstein_distance(mu,mu2), states)))
-            # return np.argmin(map(lambda mu2 : stats.wasserstein_distance(mu,mu2), states))
+
             return np.argmin(map(lambda mu2 : np.sum(np.abs(mu - mu2)), self.states))
 
 
-
-        #N_episodes = 1000 delta t=0.01, truncate at horizon T=10
-
-
-    def get_opt_ctrl(self,Q_table):
-            return [np.argmax(Q_table[i_mu]) for i_mu in range(self.n_states)]
