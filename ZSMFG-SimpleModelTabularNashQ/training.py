@@ -8,15 +8,15 @@ from myTable import myQTable
 
 
 npzfile = np.load("Tabular Q-learning/test10f7a3_paramsBook_from-v3d5_10Pts_gamma0p5_envT1_cont20Pts_contT0p1_cont30pts_contT0p2/test10f7_results_iter10.npz")
-Q_prev =             npzfile['Q']
+Q_prev =      npzfile['Q']
 
 
 lr = 1.0
 
 env = my1dGridEnv()
 table = myQTable()
-table.init_states()#initialize the states
-table.init_ctrl()#initialize the controls
+table.init_states() #initialize the states
+table.init_ctrl() #initialize the controls
 
 #Q_old should be table.Q_old if there is no previous Q-table
 
@@ -60,16 +60,17 @@ if __name__ == '__main__':
                     alpha_2 = table.controls[i_alpha_2]
                     trans_mat_1 = env.cal_transition_matrix(alpha_1)
                     print(trans_mat_1)
-                    next_mu_1 = np.mat(mu_1.T,trans_mat_1)
+                    next_mu_1 = np.inner(mu_1,trans_mat_1)
                     trans_mat_2 = env.cal_transition_matrix(alpha_2)
-                    next_mu_2 = np.mat(mu_2,trans_mat_2)
+                    next_mu_2 = np.inner(mu_2,trans_mat_2)
 
                     
                     i_mu_1_next = table.proj_W_index(next_mu_1) # find its most nearest mu
                     i_mu_2_next = table.proj_W_index(next_mu_2) # find its most nearest mu
 
-                    r_next = env.get_population_level_reward_mat(table.states[i_mu_1_next], table.states[i_mu_2_next])
+                    r_next = env.get_population_level_reward(table.states[i_mu_1_next], table.states[i_mu_2_next])
 
+                    # Nash Q
                     r_matrix_1,r_matrix_2 = env.get_reward_mat(table.states[i_mu_1_next],table.states[i_mu_2_next])
 
                     pi_1, pi_2 = env.get_nash_Q_value(r_matrix_1,r_matrix_2)

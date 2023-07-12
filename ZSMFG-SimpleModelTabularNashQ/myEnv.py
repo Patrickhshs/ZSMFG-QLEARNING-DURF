@@ -45,23 +45,23 @@ class my1dGridEnv(object):
     def get_agent_level_reward(self,state,mu_of_other_population,agent1=True):
         if agent1:
             cost = self.c*mu_of_other_population[state]
-        else:
-            cost = self.c*mu_of_other_population[state]
+
         return cost
             
 
 
     # visit every action pair of player 1 and player 2 to get reward matrix
     def get_population_level_reward(self,mu_1,mu_2):
-        reward = 0
+        reward_1 = 0
         for s in range(self.n_states):
-            reward += mu_1[s]*self.get_agent_level_reward(s,mu_2)
+            reward_1 += mu_1[s]*self.get_agent_level_reward(s,mu_2)
+            reward_2 += -mu_2[s]*self.get_agent_level_reward(s,mu_1)
         
-        return  reward
+        return  reward_1, reward_2
 
     def get_reward_mat(self,mu_1,mu_2):
-        reward_mat_1=np.zeros(self.n_actions,self.n_actions)
-        reward_mat_2=np.zeros(self.n_actions,self.n_actions)
+        reward_mat_1=np.zeros((self.n_actions,self.n_actions))
+        reward_mat_2=np.zeros((self.n_actions,self.n_actions))
 
 
         naive_action =[[1,0,0],[0,1,0],[0,0,1]]
@@ -69,8 +69,7 @@ class my1dGridEnv(object):
             for l in range(len(naive_action)):
                 next_mu_1 = np.mat(mu_1,self.cal_transition_matrix(naive_action[i]))
                 next_mu_2 = np.mat(mu_2,self.cal_transition_matrix(naive_action[l]))
-                reward_1 = self.get_population_level_reward(next_mu_1, next_mu_2)
-                reward_2 = self.get_population_level_reward(next_mu_1, next_mu_2,agent2=False)
+                reward_1, reward_2 = self.get_population_level_reward(next_mu_1, next_mu_2)
                 reward_mat_1[i][l] = reward_1
                 reward_mat_2[i][l] = reward_2
 
