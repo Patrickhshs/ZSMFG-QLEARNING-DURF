@@ -7,8 +7,8 @@ from myTable import myQTable
 
 
 
-npzfile = np.load("Tabular Q-learning/test10f7a3_paramsBook_from-v3d5_10Pts_gamma0p5_envT1_cont20Pts_contT0p1_cont30pts_contT0p2/test10f7_results_iter10.npz")
-Q_prev =      npzfile['Q']
+#npzfile = np.load("Tabular Q-learning/test10f7a3_paramsBook_from-v3d5_10Pts_gamma0p5_envT1_cont20Pts_contT0p1_cont30pts_contT0p2/test10f7_results_iter10.npz")
+#Q_prev =      npzfile['Q']
 
 
 lr = 1.0
@@ -25,17 +25,17 @@ print(np.shape(Q_old))
 
 
 
-iter_save = 5
+iter_save = 50
 
 discount_gamma = 0.5 # for one unit of time
 discount_beta = - np.log(discount_gamma)
 discount = np.exp(-discount_beta * env.T)
 print("discount = {}".format(discount))
-print(table.states[0])
+print(table.states[-1])
 
 
 
-N_episodes = 1000
+N_episodes = 500
 
 
 
@@ -70,13 +70,16 @@ if __name__ == '__main__':
                     r_next_1, r_next_2 = env.get_population_level_reward(table.states[i_mu_1_next], table.states[i_mu_2_next])
 
                     # Nash Q
-                    r_matrix_1,r_matrix_2 = env.get_reward_mat(table.states[i_mu_1_next],table.states[i_mu_2_next])
+                    r_matrix_1,r_matrix_2 = env.get_reward_mat(table.states[i_mu_1_next],table.states[i_mu_2_next],table)
 
                     pi_1, pi_2 = env.get_nash_Q_value(r_matrix_1,r_matrix_2)
+
+                    print(pi_1)
+                    print(pi_2)
                     #print(Q_old[i_mu_1_next][i_alpha_1][i_alpha_2])
                     Q_nash = np.dot(pi_1,pi_2) * Q_old[i_mu_1_next][i_alpha_1][i_alpha_2]
-                    print(r_next_1)
-                    print("mu = {},\t mu_next = {}, \t mu_next_proj = {}".format(mu_1, next_mu_1, table.states[i_mu_1_next]))
+                    #print(r_next_1)
+                    #print("mu = {},\t mu_next = {}, \t mu_next_proj = {}".format(mu_1, next_mu_1, table.states[i_mu_1_next]))
                     
                     #update the New Q table
                     Q_new[i_mu][i_alpha_1][i_alpha_2] += lr * (r_next_1 + discount * Q_nash)

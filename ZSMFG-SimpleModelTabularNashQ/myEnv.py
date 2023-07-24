@@ -4,7 +4,7 @@ import nashpy as nash
 
 class my1dGridEnv(object):
 
-    def __init__(self,size=5,p=4):
+    def __init__(self,size=4):
         self.size = size # Dimension of 1D world
         self.n_states = self.size 
         self.n_actions = 3 # [0,1,-1]
@@ -42,6 +42,8 @@ class my1dGridEnv(object):
 
 
 
+
+
     def get_agent_level_reward(self,state,mu_of_other_population,agent1=True):
         if agent1:
             cost = self.c*mu_of_other_population[state]
@@ -60,17 +62,20 @@ class my1dGridEnv(object):
         
         return  reward_1, reward_2
 
-    def get_reward_mat(self,mu_1,mu_2):
+    def get_reward_mat(self,mu_1,mu_2,table):
         reward_mat_1=np.zeros((self.n_actions,self.n_actions))
         reward_mat_2=np.zeros((self.n_actions,self.n_actions))
 
 
-        naive_action =[[1,0,0],[0,1,0],[0,0,1]]
+        naive_action = [[1,0,0],[0,1,0],[0,0,1]]
         for i in range(len(naive_action)):
             for l in range(len(naive_action)):
                 next_mu_1 = np.inner(mu_1,self.cal_transition_matrix(naive_action[i]))
                 next_mu_2 = np.inner(mu_2,self.cal_transition_matrix(naive_action[l]))
-                reward_1, reward_2 = self.get_population_level_reward(next_mu_1, next_mu_2)
+                i_next_1 = table.proj_W_index(next_mu_1)
+                i_next_2 = table.proj_W_index(next_mu_2)
+
+                reward_1, reward_2 = self.get_population_level_reward(table.states[i_next_1], table.states[i_next_2])
                 reward_mat_1[i][l] = reward_1
                 reward_mat_2[i][l] = reward_2
 

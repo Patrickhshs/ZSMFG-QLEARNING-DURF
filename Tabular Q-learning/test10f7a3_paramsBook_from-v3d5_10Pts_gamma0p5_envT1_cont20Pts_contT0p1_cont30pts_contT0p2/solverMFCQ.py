@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
                 # print("mu = {},\t mu_next = {}, \t mu_next_proj = {}".format(mu, mu_next, states[i_mu_next]))
 
-                Q_opt = np.max(Q_old[i_mu_next])#select the largest Q value
+                Q_opt = np.max(Q_old[i_mu_next]) #select the largest Q value
                 
                 #update the New Q table
                 Q_new[i_mu, i_alpha] += lr * (r_next + discount * Q_opt)

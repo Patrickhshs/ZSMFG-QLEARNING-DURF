@@ -5,7 +5,7 @@ import itertools
 
 class myQTable():
     
-        def __init__(self,n_states_x=5,n_steps_state=50):
+        def __init__(self,n_states_x=4,n_steps_state=10):
             self.n_states_x=n_states_x
             self.n_steps_state=n_steps_state # big N in the simplex discretization 
 
@@ -33,5 +33,12 @@ class myQTable():
             print("Q shape = {}".format(np.shape(self.Q_old)))
         
         def proj_W_index(self,mu):
-            
-            return np.argmin(map(lambda mu2: np.sum(np.abs(mu - mu2)), self.states))
+            minimal = 999
+            index = 0
+            for i in range(np.shape(self.states)[0]):
+                distance = np.sum(np.abs(mu - self.states[i]))
+                if distance < minimal:
+                    minimal = distance
+                    index = i
+            #return np.argmin(map(lambda mu2: np.sum(np.abs(mu - mu2)), self.states))
+            return index
