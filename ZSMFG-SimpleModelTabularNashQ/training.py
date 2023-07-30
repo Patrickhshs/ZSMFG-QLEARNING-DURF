@@ -1,4 +1,3 @@
-import time
 import numpy as np
 
 from myEnv import my1dGridEnv
@@ -11,21 +10,26 @@ from myTable import myQTable
 #Q_prev =      npzfile['Q']
 
 
-lr = 1.0
+lr = 0.9
 
 env = my1dGridEnv()
 table = myQTable()
 table.init_states() #initialize the states
 table.init_ctrl() #initialize the controls
 
+antagonist_table = myQTable()
+antagonist_table.init_states()
+antagonist_table.init_ctrl()
 #Q_old should be table.Q_old if there is no previous Q-table
 
+Q_old_anta = antagonist_table.Q_old
 Q_old = table.Q_old
-print(np.shape(Q_old))
 
 
 
-iter_save = 50
+
+
+iter_save = 20
 
 discount_gamma = 0.5 # for one unit of time
 discount_beta = - np.log(discount_gamma)
@@ -35,7 +39,7 @@ print(table.states[-1])
 
 
 
-N_episodes = 500
+N_episodes = 250
 
 
 
@@ -46,11 +50,12 @@ if __name__ == '__main__':
     for i in range(1, 1+N_episodes):
         print('\n\n======================================== Episode {}\n\n'.format(i))
         Q_new = (1-lr) * Q_old.copy()#First part of Q_new
+        Q_new_anta = (1-lr) * Q_old_anta.copy()
         for i_mu in range(table.n_states):
             # print("i_mu = {}\n".format(i_mu))
 
-            mu_1 = table.states[i_mu]
-            mu_2 = table.states[table.n_states-1-i_mu]
+            mu_1 = table.states[table.n_states-1-i_mu] # initial predator starts from left
+            mu_2 = table.states[i_mu] # preyer starts from the right
             for i_alpha_1 in range(table.n_controls):
 
                 for i_alpha_2 in range(table.n_controls):
@@ -58,10 +63,8 @@ if __name__ == '__main__':
                     # print("i_alpha = {}\n".format(i_alpha))
                     alpha_1 = table.controls[i_alpha_1]
                     alpha_2 = table.controls[i_alpha_2]
-                    trans_mat_1 = env.cal_transition_matrix(alpha_1)
-                    next_mu_1 = np.inner(mu_1,trans_mat_1)
-                    trans_mat_2 = env.cal_transition_matrix(alpha_2)
-                    next_mu_2 = np.inner(mu_2,trans_mat_2)
+                    next_mu_1 = env.get_next_mu(mu_1,alpha_1)
+                    next_mu_2 = env.get_next_mu(mu_2,alpha_2)
 
                     
                     i_mu_1_next = table.proj_W_index(next_mu_1) # find its most nearest mu
@@ -71,18 +74,30 @@ if __name__ == '__main__':
 
                     # Nash Q
                     r_matrix_1,r_matrix_2 = env.get_reward_mat(table.states[i_mu_1_next],table.states[i_mu_2_next],table)
+                    # print(r_matrix_1.shape)
+                    # print(Q_old[i_mu_1_next].shape)
+                    # print(Q_old_anta[i_mu_2_next].shape)
+                    #pi_1,pi_2 = env.get_nash_Q_value(Q_old[i_mu_1_next],Q_old_anta[i_mu_2_next])
+                    #pi_1,pi_2 = env.get_nash_Q_value(Q_old[i_mu_1_next],Q_old_anta[i_mu_2_next])
 
-                    pi_1, pi_2 = env.get_nash_Q_value(r_matrix_1,r_matrix_2)
-
+                    pi_1, pi_2 = env.lemke_howson(r_matrix_1,r_matrix_2)
                     print(pi_1)
                     print(pi_2)
-                    #print(Q_old[i_mu_1_next][i_alpha_1][i_alpha_2])
-                    Q_nash = np.dot(pi_1,pi_2) * Q_old[i_mu_1_next][i_alpha_1][i_alpha_2]
-                    #print(r_next_1)
-                    #print("mu = {},\t mu_next = {}, \t mu_next_proj = {}".format(mu_1, next_mu_1, table.states[i_mu_1_next]))
+                    
+                    #print(pi_1[1].shape)
+                    
+                    # print(Q_old[i_mu_1_next][i_alpha_1][i_alpha_2])
+                    Q_nash = np.dot(np.dot(pi_1.T, Q_old[i_mu_1_next]),pi_2)
+                    # print(np.multiply(pi_1[1].T, Q_old[i_mu_1_next]).shape)
+                    Q_nash_anta = np.dot(np.dot(pi_1.T, Q_old_anta[i_mu_2_next]),pi_2)
+                    # print(r_next_1)\
+                    
+                    print("mu = {},\t mu_next = {}, \t mu_next_proj = {}".format(mu_1, next_mu_1, table.states[i_mu_1_next]))
                     
                     #update the New Q table
                     Q_new[i_mu][i_alpha_1][i_alpha_2] += lr * (r_next_1 + discount * Q_nash)
+                    Q_new_anta[i_mu][i_alpha_1][i_alpha_2] += lr * (r_next_2 + discount * Q_nash_anta)
+
 
         # print("np.abs(Q_new - Q_old) = ", np.abs(Q_new - Q_old))
 
