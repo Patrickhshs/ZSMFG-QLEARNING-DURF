@@ -73,26 +73,34 @@ if __name__ == '__main__':
                     r_next_1, r_next_2 = env.get_population_level_reward(table.states[i_mu_1_next], table.states[i_mu_2_next])
 
                     # Nash Q
-                    r_matrix_1,r_matrix_2 = env.get_reward_mat(table.states[i_mu_1_next],table.states[i_mu_2_next],table)
+                    #r_matrix_1,r_matrix_2 = env.get_reward_mat(table.states[i_mu_1_next],table.states[i_mu_2_next],table)
                     # print(r_matrix_1.shape)
                     # print(Q_old[i_mu_1_next].shape)
                     # print(Q_old_anta[i_mu_2_next].shape)
-                    #pi_1,pi_2 = env.get_nash_Q_value(Q_old[i_mu_1_next],Q_old_anta[i_mu_2_next])
-                    #pi_1,pi_2 = env.get_nash_Q_value(Q_old[i_mu_1_next],Q_old_anta[i_mu_2_next])
+                    #print(r_matrix_1)
+                    #print(r_matrix_2)
 
-                    pi_1, pi_2 = env.lemke_howson(r_matrix_1,r_matrix_2)
-                    print(pi_1)
-                    print(pi_2)
+                    
+                    #pi_1,pi_2 = env.get_nash_Q_value(r_matrix_1,r_matrix_2,table)
+                    pi_1 = env.get_nash_Q_value(Q_old[i_mu_1_next])
+                    pi_2 = env.get_nash_Q_value(Q_old_anta[i_mu_2_next].T)
+                    #print(r_matrix_1)
+                    #print(r_matrix_2)
+                    #pi_1, pi_2 = env.linear_programming_duality(Q_old[i_mu_1_next],Q_old_anta[i_mu_2_next])
+                    if i==2:
+                        print(Q_old[i_mu_1_next]==-Q_old_anta[i_mu_2_next])
+                        print(pi_1.shape)
+                        print(pi_2.shape)
                     
                     #print(pi_1[1].shape)
                     
                     # print(Q_old[i_mu_1_next][i_alpha_1][i_alpha_2])
-                    Q_nash = np.dot(np.dot(pi_1.T, Q_old[i_mu_1_next]),pi_2)
+                    Q_nash = np.dot(np.dot(pi_1, Q_old[i_mu_1_next]),pi_2)
                     # print(np.multiply(pi_1[1].T, Q_old[i_mu_1_next]).shape)
-                    Q_nash_anta = np.dot(np.dot(pi_1.T, Q_old_anta[i_mu_2_next]),pi_2)
+                    Q_nash_anta = np.dot(np.dot(pi_1, Q_old_anta[i_mu_2_next]),pi_2)
                     # print(r_next_1)\
                     
-                    print("mu = {},\t mu_next = {}, \t mu_next_proj = {}".format(mu_1, next_mu_1, table.states[i_mu_1_next]))
+                    #print("mu = {},\t mu_next = {}, \t mu_next_proj = {}".format(mu_1, next_mu_1, table.states[i_mu_1_next]))
                     
                     #update the New Q table
                     Q_new[i_mu][i_alpha_1][i_alpha_2] += lr * (r_next_1 + discount * Q_nash)
@@ -111,5 +119,6 @@ if __name__ == '__main__':
         #opt_ctrls = table.get_opt_ctrl(Q_new)
         # print("***** opt_ctrls = {}".format(opt_ctrls))
         Q_old = Q_new.copy()
-        if (i % iter_save == 0):
+        Q_old_anta = Q_new_anta.copy()
+        if (i % iter_save == 0) or i==1:
             np.savez("results_iter{}".format(i), Q=Q_new, n_states_x=table.n_states_x, n_steps_state=table.n_steps_state, n_steps_ctrl=table.n_steps_ctrl, iters=iters, Q_diff_sup=Q_diff_sup, Q_diff_L2=Q_diff_L2)

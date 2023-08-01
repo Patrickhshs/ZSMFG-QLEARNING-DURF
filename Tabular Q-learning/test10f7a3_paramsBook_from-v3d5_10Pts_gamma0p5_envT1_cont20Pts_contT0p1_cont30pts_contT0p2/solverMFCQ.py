@@ -42,7 +42,7 @@ print(np.shape(Q_old))
 
 
 
-iter_save = 5
+iter_save = 50
 
 discount_gamma = 0.5 # for one unit of time
 discount_beta = - np.log(discount_gamma)

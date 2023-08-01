@@ -5,9 +5,10 @@ import itertools
 
 class myQTable():
     
-        def __init__(self,n_states_x=4,n_steps_state=10):
+        def __init__(self,n_states_x=3,n_steps_state=5):
             self.n_states_x=n_states_x
             self.n_steps_state=n_steps_state # big N in the simplex discretization 
+            self.n_steps_ctrl = 3
 
         def init_states(self):
             
@@ -17,19 +18,20 @@ class myQTable():
             self.states = states_tmp[np.where(np.sum(states_tmp, axis=1) == self.n_steps_state)] / float(self.n_steps_state)#shape:(5456,4)
             #print(self.states[1:3])
             self.n_states = np.shape(self.states)[0]
-            self.n_steps_ctrl = 2 # as we have 
+            print(self.states)
+             # as we have 
 
         def init_ctrl(self):
-
-            combi_ctrl = itertools.product(np.linspace(0,1,self.n_steps_ctrl+1), repeat=self.n_states_x)# n_states_x) # cartesian product; all possible controls as functions of state_x
+            combi_ctrl = itertools.product(np.linspace(0,self.n_steps_ctrl,self.n_steps_ctrl+1,dtype=int), repeat=3)# n_states_x) # cartesian product; all possible controls as functions of state_x
             controls = np.asarray([el for el in combi_ctrl]) # np.linspace(0,1,n_steps_ctrl+1)
-            print("controls = {}".format(controls))
-            self.n_controls = np.shape(controls)[0]
+            self.controls = controls[np.where(np.sum(controls, axis=1) == self.n_steps_ctrl)] / float(self.n_steps_ctrl)
+            self.n_controls = np.shape(self.controls)[0]
+            #print("controls = {}".format(self.controls))
             print('MDP: n states = {}\nn controls = {}'.format(self.n_states, self.n_controls))
             self.Q_old = np.zeros((self.n_states, self.n_controls ,self.n_controls)) # shape:(state,action_1,action_2)
-            self.controls = controls
+            
             # Q_old[:,11] = 0.01
-            # Q_new = np.zeros((n_states, n_controls))
+            # Q_new = np.zeros((n_states, n_controls))v 
             print("Q shape = {}".format(np.shape(self.Q_old)))
         
         def proj_W_index(self,mu):
