@@ -35,11 +35,11 @@ discount_gamma = 0.5 # for one unit of time
 discount_beta = - np.log(discount_gamma)
 discount = np.exp(-discount_beta * env.T)
 print("discount = {}".format(discount))
-print(table.states[-1])
+print(table.controls)        
 
 
 
-N_episodes = 250
+N_episodes = 100
 
 
 
@@ -80,17 +80,20 @@ if __name__ == '__main__':
                     #print(r_matrix_1)
                     #print(r_matrix_2)
 
-                    
+                    # print(Q_old[i_mu_1_next])
+                    # print(Q_old_anta[i_mu_2_next])
                     #pi_1,pi_2 = env.get_nash_Q_value(r_matrix_1,r_matrix_2,table)
-                    pi_1 = env.get_nash_Q_value(Q_old[i_mu_1_next])
-                    pi_2 = env.get_nash_Q_value(Q_old_anta[i_mu_2_next].T)
+                    pi_1,pi_2 = env.get_nash_Q_value(Q_old[i_mu_1_next],Q_old_anta[i_mu_2_next],table)
+                     
                     #print(r_matrix_1)
                     #print(r_matrix_2)
                     #pi_1, pi_2 = env.linear_programming_duality(Q_old[i_mu_1_next],Q_old_anta[i_mu_2_next])
-                    if i==2:
-                        print(Q_old[i_mu_1_next]==-Q_old_anta[i_mu_2_next])
-                        print(pi_1.shape)
-                        print(pi_2.shape)
+                    #pi_1, pi_2 = env.compute_nash_equilibrium(Q_old[i_mu_1_next],Q_old_anta[i_mu_2_next])
+                    
+                    #print(Q_old[i_mu_1_next]==-Q_old_anta[i_mu_2_next])
+                    # print(pi_1)
+                    # print(pi_2.shape)
+                    # print(Q_old)
                     
                     #print(pi_1[1].shape)
                     
@@ -100,18 +103,19 @@ if __name__ == '__main__':
                     Q_nash_anta = np.dot(np.dot(pi_1, Q_old_anta[i_mu_2_next]),pi_2)
                     # print(r_next_1)\
                     
-                    #print("mu = {},\t mu_next = {}, \t mu_next_proj = {}".format(mu_1, next_mu_1, table.states[i_mu_1_next]))
+                    # print("mu = {},\t mu_next = {}, \t mu_next_proj = {}".format(mu_1, next_mu_1, table.states[i_mu_1_next]))
                     
                     #update the New Q table
                     Q_new[i_mu][i_alpha_1][i_alpha_2] += lr * (r_next_1 + discount * Q_nash)
                     Q_new_anta[i_mu][i_alpha_1][i_alpha_2] += lr * (r_next_2 + discount * Q_nash_anta)
-
+                    
 
         # print("np.abs(Q_new - Q_old) = ", np.abs(Q_new - Q_old))
 
         # Calculate the Q_diff_sup and Q_diff_L2 to see if converges
         iters.append(i)
         Q_diff_sup.append(np.max(np.abs(Q_new - Q_old)))
+        #
         print("***** sup|Q_new - Q_old| = {}".format(Q_diff_sup[-1]))
         Q_diff_L2.append(np.sqrt(np.sum(np.square(Q_new - Q_old))))
         print("***** L2|Q_new - Q_old| = {}\n".format(Q_diff_L2[-1]))
