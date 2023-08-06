@@ -10,7 +10,7 @@ from myTable import myQTable
 #Q_prev =      npzfile['Q']
 
 
-lr = 0.9
+lr = 0.5
 
 env = my1dGridEnv()
 table = myQTable()
@@ -39,7 +39,7 @@ print(table.controls)
 
 
 
-N_episodes = 100
+N_episodes = 2
 
 
 
@@ -82,8 +82,8 @@ if __name__ == '__main__':
 
                     # print(Q_old[i_mu_1_next])
                     # print(Q_old_anta[i_mu_2_next])
-                    #pi_1,pi_2 = env.get_nash_Q_value(r_matrix_1,r_matrix_2,table)
-                    pi_1,pi_2 = env.get_nash_Q_value(Q_old[i_mu_1_next],Q_old_anta[i_mu_2_next],table)
+                    pi_1,pi_2 = env.find_nash_gambit(Q_old[i_mu_1_next],Q_old_anta[i_mu_2_next])
+                    #pi_1,pi_2 = env.get_nash_Q_value(Q_old[i_mu_1_next],Q_old_anta[i_mu_2_next],table)
                      
                     #print(r_matrix_1)
                     #print(r_matrix_2)
@@ -113,7 +113,7 @@ if __name__ == '__main__':
         # print("np.abs(Q_new - Q_old) = ", np.abs(Q_new - Q_old))
 
         # Calculate the Q_diff_sup and Q_diff_L2 to see if converges
-        iters.append(i)
+        
         Q_diff_sup.append(np.max(np.abs(Q_new - Q_old)))
         #
         print("***** sup|Q_new - Q_old| = {}".format(Q_diff_sup[-1]))
@@ -124,5 +124,7 @@ if __name__ == '__main__':
         # print("***** opt_ctrls = {}".format(opt_ctrls))
         Q_old = Q_new.copy()
         Q_old_anta = Q_new_anta.copy()
+        print(Q_old)
+        print(Q_old_anta)
         if (i % iter_save == 0) or i==1:
             np.savez("results_iter{}".format(i), Q=Q_new, n_states_x=table.n_states_x, n_steps_state=table.n_steps_state, n_steps_ctrl=table.n_steps_ctrl, iters=iters, Q_diff_sup=Q_diff_sup, Q_diff_L2=Q_diff_L2)
